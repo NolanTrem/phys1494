@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "PHYS1494"
+version = "0.1.0"
+description = "A collection of reports, data, and tools for PHYS1494 at Columbia University"
+authors = ["Nolan Tremelling <nnt2109@columbia.edu>"] 
+license = "MIT"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+isort = "^5.9.3"
+
+[tool.black]
+line-length = 78
+target-version = ['py39']
+
+[tool.isort]
+profile = "black"
+line_length = 78
