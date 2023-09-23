@@ -17,8 +17,11 @@ def calculate_mean_and_error(values):
     std_error = np.std(values, ddof=1) / np.sqrt(len(values))
     return mean_val, std_error
 
-# Group data by height and calculate mean and standard error for each height
-grouped_data = data.groupby('h (mm)')
+# Convert height from mm to cm
+data['h (cm)'] = data['h (mm)'] / 10.0
+
+# Group data by height (now in cm) and calculate mean and standard error for each height
+grouped_data = data.groupby('h (cm)')
 means = grouped_data['ax (m/s^2)'].apply(calculate_mean_and_error).reset_index()
 
 # Split the combined column into separate columns
@@ -26,21 +29,21 @@ means[['ax_mean', 'ax_error']] = pd.DataFrame(means['ax (m/s^2)'].tolist(), inde
 del means['ax (m/s^2)']
 
 # Fit a line to the data
-slope, intercept, r_value, p_value, std_err = linregress(means['h (mm)'], means['ax_mean'])
+slope, intercept, r_value, p_value, std_err = linregress(means['h (cm)'], means['ax_mean'])
 
 # Create a best-fit line
-best_fit_line = slope * means['h (mm)'] + intercept
+best_fit_line = slope * means['h (cm)'] + intercept
 
 # Plotting
 plt.figure(figsize=(10, 6))
-plt.errorbar(means['h (mm)'], means['ax_mean'], yerr=means['ax_error'], fmt='o', label='Experimental Data', capsize=5)
-plt.plot(means['h (mm)'], best_fit_line, '-r', label=f'Best Fit Line (y = {slope:.5f}x + {intercept:.5f})')
+plt.errorbar(means['h (cm)'], means['ax_mean'], yerr=means['ax_error'], fmt='o', label='Experimental Data', capsize=5)
+plt.plot(means['h (cm)'], best_fit_line, '-r', label=f'Best Fit Line (y = {slope:.5f}x + {intercept:.5f})')
 plt.title("Acceleration vs Track Height")
 plt.xlabel("Track Height (h) in cm")
 plt.ylabel("Acceleration (ax) in m/s^2")
 plt.legend()
 plt.grid(True)
-plt.show()
+plt.savefig('experiment1/figures/gravitational_acceleration_graph.png')
 
 # Calculate g using the slope and track length
 g_estimated = slope * L
