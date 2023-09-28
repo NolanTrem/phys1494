@@ -28,8 +28,19 @@ means = grouped_data['ax (m/s^2)'].apply(calculate_mean_and_error).reset_index()
 means[['ax_mean', 'ax_error']] = pd.DataFrame(means['ax (m/s^2)'].tolist(), index=means.index)
 del means['ax (m/s^2)']
 
+# Display the values for h, ax_mean, and ax_error
+print("Height (h), Mean Acceleration (ax_mean), and Standard Error (ax_error):")
+print(means)
+
 # Fit a line to the data
 slope, intercept, r_value, p_value, std_err = linregress(means['h (cm)'], means['ax_mean'])
+
+# Display the slope and its standard error
+print(f"\nSlope (m): {slope:.5f} with standard error: {std_err:.5f}")
+
+# Display the intercept and its standard error
+SE_intercept = std_err * np.sqrt((1/len(means['h (cm)'])) + (np.mean(means['h (cm)'])**2 / sum((means['h (cm)'] - np.mean(means['h (cm)']))**2)))
+print(f"Intercept (b): {intercept:.5f} with standard error: {SE_intercept:.5f}")
 
 # Create a best-fit line
 best_fit_line = slope * means['h (cm)'] + intercept
@@ -49,4 +60,10 @@ plt.savefig('experiment1/figures/gravitational_acceleration_graph.png')
 g_estimated = slope * L
 sigma_g = std_err * L
 
-print(f"Estimated value for g: {g_estimated:.4f} m/s^2 with an uncertainty of σg = {sigma_g:.4f} m/s^2")
+print(f"\nEstimated value for g: {g_estimated:.4f} m/s^2 with an uncertainty of σg = {sigma_g:.4f} m/s^2")
+
+data['Delta'] = (data['v1 (m/s)'] ** 2) / (2 * data['ax (m/s^2)'] * data['l2 (m)']) - 1
+
+# Display the Delta values for each trial
+print("Delta values for the trials:")
+print(data[['Trial #', 'Delta']])
