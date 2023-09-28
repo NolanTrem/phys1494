@@ -10,7 +10,7 @@ This repository contains lab reports, data, and analysis scripts for the Physics
 1. **Experiment 1**: Velocity, Acceleration, and \( g \)
    - **Description**: This experiment explores the concepts of velocity and acceleration, with a focus on the gravitational acceleration \( g \).
    - **Files**: 
-     - [Report](TBD)
+     - [Report](experiment1/PHYS1494_Experiment_1.pdf)
      - [Files](experiment1)
 
 
