@@ -62,11 +62,20 @@ for trial, data in trials.items():
         "Standard Deviation": (overall_std_dev_x, overall_std_dev_y)
     }
 
-# Moved the printing of the results outside the main loop
 output = ""
-for trial, data in results.items():
+y_lab_manual = [35.12317744, 63.69481605, 57.62550324, 66.77425112]
+y_degree_estimate = [29.61330724, 32.31506849, 31.92818004, 32.45342466]
+y_computed = [data["Mean Position"][1] for _, data in results.items()]
+differences_lab_manual = [computed - manual for computed, manual in zip(y_computed, y_lab_manual)]
+differences_degree_estimate = [computed - estimate for computed, estimate in zip(y_computed, y_degree_estimate)]
+
+for i, (trial, data) in enumerate(results.items()):
     output += f"{trial}:\n"
     output += f"  Mean Position: {data['Mean Position']}\n"
-    output += f"  Standard Deviation: {data['Standard Deviation']}\n\n"
+    output += f"  Standard Deviation: {data['Standard Deviation']}\n"
+    output += f"  Computed y-coordinate: {y_computed[i]:.4f} cm\n"
+    output += f"  Difference from y-lab manual formula: {differences_lab_manual[i]:.4f} cm\n"
+    output += f"  Difference from y-degree estimate: {differences_degree_estimate[i]:.4f} cm\n\n"
 
+# Print combined output
 print(output)
