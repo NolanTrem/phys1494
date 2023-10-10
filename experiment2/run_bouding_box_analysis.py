@@ -1,6 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from bounding_box import BoundingBox
+
+g = 9.81  # Acceleration due to gravity (m/s^2)
 
 # Data for the trials
 trials = {
@@ -34,6 +37,26 @@ trials = {
     }
 }
 
+provided_data = {
+    'Trial 1 (metal)': {'h1': 1.24, 'h2': 1.183, 'h3': 1.125, 'D': 0.274, 'L': 0.292, 'v0': 0.7393, 'x_lab_manual': 0.3512},
+    'Trial 2 (metal)': {'h1': 1.29, 'h2': 1.146, 'h3': 1.111, 'D': 0.28, 'L': 0.292, 'v0': 1.3288, 'x_lab_manual': 0.6369},
+    'Trial 1 (plastic)': {'h1': 1.314, 'h2': 1.128, 'h3': 1.092, 'D': 0.283, 'L': 0.292, 'v0': 1.2014, 'x_lab_manual': 0.5763},
+    'Trial 2 (plastic)': {'h1': 1.334, 'h2': 1.114, 'h3': 1.086, 'D': 0.287, 'L': 0.292, 'v0': 1.3856, 'x_lab_manual': 0.6677}
+}
+
+# Calculate expected x and its uncertainty
+expected_x = {}
+for trial, data in provided_data.items():
+    h1 = data['h1']
+    h2 = data['h2']
+    h3 = data['h3']
+    D = data['D']
+    L = data['L']
+    v0 = data['v0']
+    
+    x = v0 * (D / L) * (v0 - (h2 - h3) / L + np.sqrt(((v0 - (h2 - h3)) / L)**2 + 2 * g * h2))
+    expected_x[trial] = x
+
 # Analyze each trial
 results = {}
 
@@ -51,10 +74,8 @@ for trial, data in trials.items():
     total_points = len(data["Radial measurements"]) + bbox.num_points
     overall_mean_x = (np.sum(data["Radial measurements"]) + bbox.num_points * bbox_mean[0]) / total_points
     overall_mean_y = (np.sum(data["Radial measurements"]) + bbox.num_points * bbox_mean[1]) / total_points
-    overall_std_dev_x = ((len(data["Radial measurements"]) - 1) * radial_std_dev**2 + bbox.num_points * bbox_std_dev[0]**2) / total_points
-    overall_std_dev_y = ((len(data["Radial measurements"]) - 1) * radial_std_dev**2 + bbox.num_points * bbox_std_dev[1]**2) / total_points
-    overall_std_dev_x = np.sqrt(overall_std_dev_x)
-    overall_std_dev_y = np.sqrt(overall_std_dev_y)
+    overall_std_dev_x = np.sqrt(((len(data["Radial measurements"]) - 1) * radial_std_dev**2 + bbox.num_points * bbox_std_dev[0]**2) / total_points)
+    overall_std_dev_y = np.sqrt(((len(data["Radial measurements"]) - 1) * radial_std_dev**2 + bbox.num_points * bbox_std_dev[1]**2) / total_points)
 
     # Store results
     results[trial] = {
@@ -63,19 +84,40 @@ for trial, data in trials.items():
     }
 
 output = ""
-y_lab_manual = [35.12317744, 63.69481605, 57.62550324, 66.77425112]
-y_degree_estimate = [29.61330724, 32.31506849, 31.92818004, 32.45342466]
-y_computed = [data["Mean Position"][1] for _, data in results.items()]
-differences_lab_manual = [computed - manual for computed, manual in zip(y_computed, y_lab_manual)]
-differences_degree_estimate = [computed - estimate for computed, estimate in zip(y_computed, y_degree_estimate)]
+x_lab_manual = [35.12317744, 63.69481605, 57.62550324, 66.77425112]
+x_degree_estimate = [29.61330724, 32.31506849, 31.92818004, 32.45342466]
+x_computed = [data["Mean Position"][1] for _, data in results.items()]
+differences_lab_manual = [computed - manual for computed, manual in zip(x_computed, x_lab_manual)]
+differences_degree_estimate = [computed - estimate for computed, estimate in zip(x_computed, x_degree_estimate)]
 
-for i, (trial, data) in enumerate(results.items()):
-    output += f"{trial}:\n"
-    output += f"  Mean Position: {data['Mean Position']}\n"
-    output += f"  Standard Deviation: {data['Standard Deviation']}\n"
-    output += f"  Computed y-coordinate: {y_computed[i]:.4f} cm\n"
-    output += f"  Difference from y-lab manual formula: {differences_lab_manual[i]:.4f} cm\n"
-    output += f"  Difference from y-degree estimate: {differences_degree_estimate[i]:.4f} cm\n\n"
+trial_names = list(results.keys())
+mean_positions_x = [data["Mean Position"][0] for _, data in results.items()]
+mean_positions_z = [data["Mean Position"][1] for _, data in results.items()]
+std_devs_x = [data["Standard Deviation"][0] for _, data in results.items()]
+std_devs_z = [data["Standard Deviation"][1] for _, data in results.items()]
 
-# Print combined output
-print(output)
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# For each trial
+for trial, data in trials.items():
+    # Extract all measurements
+    measurements = data["Radial measurements"]
+    
+    # For bounding box points, use the mean of the bounding box as the measurement
+    bbox = BoundingBox(data["Bounding Box"]["corners"][0], data["Bounding Box"]["corners"][2], data["Bounding Box"]["points"])
+    bbox_mean_x, bbox_mean_y = bbox.mean
+    measurements += [bbox_mean_x] * bbox.num_points  # Adding mean x value for each bounding box point
+    
+    # The y-error for each point will be the overall std dev of the trial
+    y_error = results[trial]["Standard Deviation"][0]
+    
+    # Plotting each point for the trial
+    ax.errorbar([trial] * len(measurements), measurements, yerr=y_error, fmt='o', capsize=5, elinewidth=1, label=f"{trial} measurements")
+
+ax.set_ylabel('Position (cm)')
+ax.set_title('Ball Landing Position with Standard Deviation')
+plt.xticks(rotation=45)
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+ax.legend()
+plt.tight_layout()
+plt.show()
