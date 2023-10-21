@@ -38,10 +38,3 @@ class BoundingBox:
         std_dev_x = self.width / (12 ** 0.5)
         std_dev_y = self.height / (12 ** 0.5)
         return std_dev_x, std_dev_y
-
-# Example usage remains the same
-bbox = BoundingBox(top_left=(1, 5), bottom_right=(4, 1), num_points=100)
-bbox_mean = bbox.mean
-bbox_std_dev = bbox.std_dev
-
-print(bbox_mean, bbox_std_dev)
